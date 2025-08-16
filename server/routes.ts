@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 // Store active scraping jobs and their abort controllers
 const activeJobs = new Map<string, AbortController>();
 
-// Rate limiting middleware
+// Rate limiting middleware  
 const scrapeRateLimit = rateLimit({
   windowMs: 5000, // 5 seconds
   max: 1, // limit each IP to 1 request per windowMs
@@ -96,18 +96,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const job = await storage.getScrapingJob(jobId);
       
       if (!job) {
+        console.log(`[CANCEL] Job not found: ${jobId}`);
         return res.status(404).json({ message: "Job not found" });
       }
 
+      console.log(`[CANCEL] Job ${jobId} status: ${job.status}`);
+      
       if (job.status !== "running" && job.status !== "pending") {
-        return res.status(400).json({ message: "Job cannot be cancelled" });
+        console.log(`[CANCEL] Job cannot be cancelled - status: ${job.status}`);
+        return res.status(400).json({ 
+          message: `Job cannot be cancelled - current status: ${job.status}` 
+        });
       }
 
       // Cancel the active job if it exists
       const controller = activeJobs.get(jobId);
       if (controller) {
+        console.log(`[CANCEL] Aborting active job: ${jobId}`);
         controller.abort();
         activeJobs.delete(jobId);
+      } else {
+        console.log(`[CANCEL] No active controller found for job: ${jobId}`);
       }
 
       // Update job status to cancelled
@@ -117,8 +126,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedAt: new Date()
       });
 
+      console.log(`[CANCEL] Job cancelled successfully: ${jobId}`);
       res.json(updatedJob);
     } catch (error: any) {
+      console.error(`[CANCEL] Error cancelling job:`, error);
       res.status(500).json({ message: "Failed to cancel scraping job" });
     }
   });
@@ -132,6 +143,7 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
   activeJobs.set(jobId, controller);
   
   try {
+    console.log(`[SCRAPE] Starting job ${jobId} for ${url}`);
     // Update job status to running
     await storage.updateScrapingJob(jobId, { status: "running" });
 
@@ -267,6 +279,7 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
     }
 
     // Update job with results
+    console.log(`[SCRAPE] Job ${jobId} completed successfully`);
     await storage.updateScrapingJob(jobId, {
       status: "completed",
       results,
@@ -276,12 +289,14 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
   } catch (error: any) {
     // Check if the error is due to abort (cancellation)
     if (error?.name === 'AbortError') {
+      console.log(`[SCRAPE] Job ${jobId} was cancelled`);
       await storage.updateScrapingJob(jobId, {
         status: "cancelled",
         error: "Cancelled by user",
         completedAt: new Date()
       });
     } else {
+      console.error(`[SCRAPE] Job ${jobId} failed:`, error?.message);
       // Update job with error
       await storage.updateScrapingJob(jobId, {
         status: "failed",
@@ -291,6 +306,7 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
     }
   } finally {
     // Clean up the active job
+    console.log(`[SCRAPE] Cleaning up job ${jobId}, active jobs count: ${activeJobs.size - 1}`);
     activeJobs.delete(jobId);
   }
 }
