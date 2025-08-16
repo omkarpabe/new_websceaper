@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 export const scrapingJobs = pgTable("scraping_jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   url: text("url").notNull(),
-  status: text("status").notNull().default("pending"), // pending, running, completed, failed
+  status: text("status").notNull().default("pending"), // pending, running, completed, failed, cancelled
   options: json("options").notNull(),
   results: json("results"),
   error: text("error"),

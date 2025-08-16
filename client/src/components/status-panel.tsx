@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { type ScrapingJob } from "@/lib/types";
+import { type ScrapingJob } from "@shared/schema";
 
 interface StatusPanelProps {
   currentJob: ScrapingJob | null;
 }
 
 export function StatusPanel({ currentJob }: StatusPanelProps) {
-  const { data: jobs } = useQuery({
+  const { data: jobs } = useQuery<ScrapingJob[]>({
     queryKey: ["/api/scraping-jobs"],
     refetchInterval: currentJob?.status === "running" ? 1000 : false,
   });
@@ -22,13 +22,15 @@ export function StatusPanel({ currentJob }: StatusPanelProps) {
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
       case "failed":
         return <Badge className="bg-red-100 text-red-800">Failed</Badge>;
+      case "cancelled":
+        return <Badge className="bg-orange-100 text-orange-800">Cancelled</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">Ready</Badge>;
     }
   };
 
   const currentStatus = currentJob?.status || "ready";
-  const lastRequest = jobs?.[0]?.createdAt 
+  const lastRequest = jobs && jobs.length > 0 && jobs[0]?.createdAt 
     ? new Date(jobs[0].createdAt).toLocaleString() 
     : "Never";
 

@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { type ScrapingFormData, type ScrapingJob } from "@/lib/types";
+import { type ScrapingFormData } from "@/lib/types";
+import { type ScrapingJob } from "@shared/schema";
 
 const formSchema = z.object({
   url: z.string().url("Please enter a valid URL"),

@@ -24,7 +24,7 @@ export interface ScrapingResults {
 export interface ScrapingJob {
   id: string;
   url: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   options: ScrapingFormData;
   results?: ScrapingResults;
   error?: string;

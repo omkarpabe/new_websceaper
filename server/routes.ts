@@ -5,6 +5,9 @@ import { insertScrapingJobSchema, scrapingOptionsSchema } from "@shared/schema";
 import * as cheerio from "cheerio";
 import rateLimit from "express-rate-limit";
 
+// Store active scraping jobs and their abort controllers
+const activeJobs = new Map<string, AbortController>();
+
 // Rate limiting middleware
 const scrapeRateLimit = rateLimit({
   windowMs: 5000, // 5 seconds
@@ -63,11 +66,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       scrapeWebsite(job.id, parsed.url, options);
 
       res.json(job);
-    } catch (error) {
-      if (error.name === "ZodError") {
+    } catch (error: any) {
+      if (error?.name === "ZodError") {
         return res.status(400).json({ message: "Invalid request data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create scraping job" });
+    }
+  });
+
+  // Cancel scraping job
+  app.post("/api/scraping-jobs/:id/cancel", async (req, res) => {
+    try {
+      const jobId = req.params.id;
+      const job = await storage.getScrapingJob(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      if (job.status !== "running" && job.status !== "pending") {
+        return res.status(400).json({ message: "Job cannot be cancelled" });
+      }
+
+      // Cancel the active job if it exists
+      const controller = activeJobs.get(jobId);
+      if (controller) {
+        controller.abort();
+        activeJobs.delete(jobId);
+      }
+
+      // Update job status to cancelled
+      const updatedJob = await storage.updateScrapingJob(jobId, {
+        status: "cancelled",
+        error: "Cancelled by user",
+        completedAt: new Date()
+      });
+
+      res.json(updatedJob);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to cancel scraping job" });
     }
   });
 
@@ -76,17 +113,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 async function scrapeWebsite(jobId: string, url: string, options: any) {
+  const controller = new AbortController();
+  activeJobs.set(jobId, controller);
+  
   try {
     // Update job status to running
     await storage.updateScrapingJob(jobId, { status: "running" });
 
-    // Fetch the webpage
+    // Fetch the webpage with timeout using AbortController
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; WebScraper/1.0)',
       },
-      timeout: 10000,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -202,8 +246,8 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
         
         results.customElements = customElements;
         results.totalElements += customElements.length;
-      } catch (error) {
-        results.customSelectorError = `Invalid CSS selector: ${error.message}`;
+      } catch (error: any) {
+        results.customSelectorError = `Invalid CSS selector: ${error?.message || 'Unknown error'}`;
       }
     }
 
@@ -214,12 +258,24 @@ async function scrapeWebsite(jobId: string, url: string, options: any) {
       completedAt: new Date()
     });
 
-  } catch (error) {
-    // Update job with error
-    await storage.updateScrapingJob(jobId, {
-      status: "failed",
-      error: error.message,
-      completedAt: new Date()
-    });
+  } catch (error: any) {
+    // Check if the error is due to abort (cancellation)
+    if (error?.name === 'AbortError') {
+      await storage.updateScrapingJob(jobId, {
+        status: "cancelled",
+        error: "Cancelled by user",
+        completedAt: new Date()
+      });
+    } else {
+      // Update job with error
+      await storage.updateScrapingJob(jobId, {
+        status: "failed",
+        error: error?.message || 'Unknown error occurred',
+        completedAt: new Date()
+      });
+    }
+  } finally {
+    // Clean up the active job
+    activeJobs.delete(jobId);
   }
 }

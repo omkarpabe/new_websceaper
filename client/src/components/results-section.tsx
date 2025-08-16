@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { type ScrapingJob } from "@/lib/types";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { type ScrapingJob } from "@shared/schema";
 
 interface ResultsSectionProps {
   currentJob: ScrapingJob | null;
@@ -11,7 +12,28 @@ interface ResultsSectionProps {
 export function ResultsSection({ currentJob }: ResultsSectionProps) {
   const { toast } = useToast();
 
-  const { data: job, isLoading } = useQuery({
+  const cancelMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await apiRequest("POST", `/api/scraping-jobs/${jobId}/cancel`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Cancelled",
+        description: "The scraping job has been cancelled successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scraping-jobs"] });
+    },
+    onError: () => {
+      toast({
+        title: "Cancel Failed",
+        description: "Failed to cancel the scraping job.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { data: job, isLoading } = useQuery<ScrapingJob>({
     queryKey: ["/api/scraping-jobs", currentJob?.id],
     enabled: !!currentJob?.id,
     refetchInterval: currentJob?.status === "running" ? 1000 : false,
@@ -21,6 +43,8 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
   const hasResults = results && job?.status === "completed";
   const isRunning = job?.status === "running";
   const hasError = job?.status === "failed";
+  const isCancelled = job?.status === "cancelled";
+  const canCancel = job?.status === "running" || job?.status === "pending";
 
   const handleDownloadJSON = () => {
     if (!results) return;
@@ -45,6 +69,12 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
     window.location.reload();
   };
 
+  const handleCancelJob = () => {
+    if (currentJob?.id) {
+      cancelMutation.mutate(currentJob.id);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
       <div className="border-b border-gray-200 p-6">
@@ -60,6 +90,27 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
           </div>
           
           <div className="flex items-center space-x-3">
+            {canCancel && (
+              <Button 
+                onClick={handleCancelJob}
+                variant="destructive"
+                size="sm"
+                disabled={cancelMutation.isPending}
+              >
+                {cancelMutation.isPending ? (
+                  <>
+                    <i className="fas fa-spinner animate-spin mr-2"></i>
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-times mr-2"></i>
+                    Cancel
+                  </>
+                )}
+              </Button>
+            )}
+            
             <Button 
               onClick={handleDownloadJSON}
               variant="outline"
@@ -116,6 +167,17 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
         </div>
       )}
 
+      {/* Cancelled State */}
+      {isCancelled && (
+        <div className="p-8 text-center">
+          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-ban text-orange-500 text-2xl"></i>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Scraping Cancelled</h3>
+          <p className="text-gray-500 mb-4">The scraping job was cancelled by the user.</p>
+        </div>
+      )}
+
       {/* Results Display */}
       {hasResults && (
         <div className="p-6">
@@ -155,7 +217,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {results.links.slice(0, 10).map((link, index) => (
+                  {results.links.slice(0, 10).map((link: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{link.text}</p>
@@ -186,7 +248,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {results.images.slice(0, 10).map((image, index) => (
+                  {results.images.slice(0, 10).map((image: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{image.alt || 'No alt text'}</p>
@@ -216,7 +278,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {results.headings.map((heading, index) => (
+                  {results.headings.map((heading: any, index: number) => (
                     <div key={index} className="flex items-start space-x-3 p-2 bg-white rounded border">
                       <Badge variant="outline" className="text-xs">
                         H{heading.level}
@@ -241,7 +303,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {results.customElements.map((element, index) => (
+                  {results.customElements.map((element: any, index: number) => (
                     <div key={index} className="p-2 bg-white rounded border">
                       <div className="flex items-center justify-between mb-1">
                         <code className="text-xs bg-gray-100 px-2 py-1 rounded">{element.selector}</code>

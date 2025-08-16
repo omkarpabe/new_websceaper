@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ScrapingForm } from "@/components/scraping-form";
 import { StatusPanel } from "@/components/status-panel";
 import { ResultsSection } from "@/components/results-section";
-import { type ScrapingJob } from "@/lib/types";
+import { type ScrapingJob } from "@shared/schema";
 
 export default function ScraperPage() {
   const [currentJob, setCurrentJob] = useState<ScrapingJob | null>(null);
