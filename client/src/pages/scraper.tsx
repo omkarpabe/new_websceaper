@@ -2,10 +2,15 @@ import { useState } from "react";
 import { ScrapingForm } from "@/components/scraping-form";
 import { StatusPanel } from "@/components/status-panel";
 import { ResultsSection } from "@/components/results-section";
+import { JobsHistory } from "@/components/jobs-history";
 import { type ScrapingJob } from "@shared/schema";
 
 export default function ScraperPage() {
   const [currentJob, setCurrentJob] = useState<ScrapingJob | null>(null);
+
+  const handleJobSelect = (job: ScrapingJob) => {
+    setCurrentJob(job);
+  };
 
   return (
     <div className="bg-gray-50 font-sans min-h-screen">
@@ -31,15 +36,24 @@ export default function ScraperPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+          {/* Main scraping form */}
+          <div className="xl:col-span-2">
             <ScrapingForm onJobCreated={setCurrentJob} />
           </div>
+          
+          {/* Status panel */}
           <div className="space-y-6">
             <StatusPanel currentJob={currentJob} />
           </div>
+          
+          {/* Jobs history */}
+          <div className="xl:row-span-2">
+            <JobsHistory onJobSelect={handleJobSelect} currentJob={currentJob} />
+          </div>
         </div>
 
+        {/* Results section */}
         <div className="mt-8">
           <ResultsSection currentJob={currentJob} />
         </div>

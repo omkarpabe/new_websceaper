@@ -39,7 +39,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
     refetchInterval: currentJob?.status === "running" ? 1000 : false,
   });
 
-  const results = job?.results;
+  const results = job?.results as any;
   const hasResults = results && job?.status === "completed";
   const isRunning = job?.status === "running";
   const hasError = job?.status === "failed";
@@ -84,7 +84,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
             <h2 className="text-xl font-semibold text-gray-900">Scraped Results</h2>
             {results && (
               <Badge variant="secondary">
-                {results.totalElements || 0} items
+                {(results as any)?.totalElements || 0} items
               </Badge>
             )}
           </div>

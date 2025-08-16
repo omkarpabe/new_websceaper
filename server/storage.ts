@@ -9,7 +9,7 @@ export interface IStorage {
   createScrapingJob(job: InsertScrapingJob): Promise<ScrapingJob>;
   getScrapingJob(id: string): Promise<ScrapingJob | undefined>;
   updateScrapingJob(id: string, updates: Partial<ScrapingJob>): Promise<ScrapingJob | undefined>;
-  getRecentScrapingJobs(limit?: number): Promise<ScrapingJob[]>;
+  getRecentScrapingJobs(limit?: number, offset?: number): Promise<{ jobs: ScrapingJob[], total: number }>;
 }
 
 export class MemStorage implements IStorage {
@@ -66,10 +66,14 @@ export class MemStorage implements IStorage {
     return updatedJob;
   }
 
-  async getRecentScrapingJobs(limit = 10): Promise<ScrapingJob[]> {
-    return Array.from(this.scrapingJobs.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, limit);
+  async getRecentScrapingJobs(limit = 10, offset = 0): Promise<{ jobs: ScrapingJob[], total: number }> {
+    const allJobs = Array.from(this.scrapingJobs.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    const jobs = allJobs.slice(offset, offset + limit);
+    const total = allJobs.length;
+    
+    return { jobs, total };
   }
 }
 

@@ -7,10 +7,17 @@ interface StatusPanelProps {
 }
 
 export function StatusPanel({ currentJob }: StatusPanelProps) {
-  const { data: jobs } = useQuery<ScrapingJob[]>({
-    queryKey: ["/api/scraping-jobs"],
+  const { data } = useQuery<{ jobs: ScrapingJob[] }>({
+    queryKey: ["/api/scraping-jobs", 1, 1],
+    queryFn: async () => {
+      const response = await fetch('/api/scraping-jobs?page=1&limit=1');
+      if (!response.ok) throw new Error('Failed to fetch jobs');
+      return response.json();
+    },
     refetchInterval: currentJob?.status === "running" ? 1000 : false,
   });
+  
+  const jobs = data?.jobs || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {

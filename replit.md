@@ -4,6 +4,13 @@
 
 Web Scraper Pro is a full-stack web application that allows users to extract data from websites through an intuitive interface. The application provides a React-based frontend for URL input and scraping configuration, with an Express.js backend that handles the web scraping operations using Cheerio. Users can extract various types of content including titles, links, images, headings, and custom CSS selector-based content from any publicly accessible website.
 
+## Recent Updates
+
+- **Job Cancellation Feature**: Added ability to cancel long-running scraping jobs with AbortController
+- **Pagination System**: Implemented paginated job history with 5 jobs per page
+- **Enhanced UI Layout**: Reorganized layout with dedicated jobs history panel
+- **Improved Error Handling**: Better TypeScript error handling and rate limiting configuration
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -32,9 +39,12 @@ Preferred communication style: Simple, everyday language.
 
 ### API Structure
 - **RESTful Endpoints**: 
-  - `GET /api/scraping-jobs` - Retrieve recent scraping jobs
+  - `GET /api/scraping-jobs?page=1&limit=10` - Retrieve paginated scraping jobs with metadata
   - `GET /api/scraping-jobs/:id` - Get specific job details
   - `POST /api/scrape` - Create new scraping job with rate limiting
+  - `POST /api/scraping-jobs/:id/cancel` - Cancel running or pending scraping jobs
+- **Pagination Support**: Server-side pagination with page, limit, total count, and navigation metadata
+- **Job Management**: Active job tracking with AbortController for cancellation support
 - **Real-time Updates**: Polling-based status updates for job progress tracking
 - **Error Handling**: Comprehensive error responses with appropriate HTTP status codes
 
