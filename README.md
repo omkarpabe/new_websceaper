@@ -1,0 +1,129 @@
+# Web Scraper Pro
+
+A full-stack web application for extracting data from websites with customizable scraping options.
+
+## Features
+
+- **Multiple Scraping Types**: Extract page titles, meta descriptions, links, images, headings, and custom CSS selector-based content
+- **Real-time Status Tracking**: Monitor scraping job progress with live updates
+- **Job Management**: Cancel long-running jobs and view paginated job history
+- **Rate Limiting**: Built-in protection against abuse (1 request per 5 seconds)
+- **Export Results**: Download scraped data as JSON files
+
+## Tech Stack
+
+- **Frontend**: React 18 + TypeScript + Vite
+- **Backend**: Express.js + Node.js
+- **UI Components**: shadcn/ui + Radix UI + Tailwind CSS
+- **Web Scraping**: Cheerio for HTML parsing
+- **State Management**: React Query for server state
+- **Validation**: Zod for type-safe schemas
+
+## Local Setup
+
+### Prerequisites
+
+- Node.js (version 18 or higher)
+- npm or yarn package manager
+
+### Installation
+
+1. **Extract the project files** to your desired directory
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser** and navigate to:
+   ```
+   http://localhost:5000
+   ```
+
+The application will be running with both frontend and backend on the same port (5000).
+
+## Usage
+
+1. **Enter a URL** in the input field (must be HTTP/HTTPS)
+2. **Select scraping options**:
+   - Page Title & Meta Description
+   - Links from the page
+   - Images with alt text
+   - Headings (H1-H6)
+   - Custom CSS selectors
+3. **Click "Start Scraping"** to begin the job
+4. **Monitor progress** in the status panel
+5. **Cancel jobs** if needed using the cancel button
+6. **View results** and download as JSON
+7. **Browse job history** with pagination
+
+## Rate Limiting
+
+The application includes rate limiting to prevent abuse:
+- **Limit**: 1 scraping request per 5 seconds per IP address
+- **Purpose**: Protect both the application and target websites
+
+## Project Structure
+
+```
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/     # UI components
+│   │   ├── pages/          # Application pages
+│   │   ├── lib/            # Utilities and configuration
+│   │   └── hooks/          # Custom React hooks
+├── server/                 # Express backend
+│   ├── index.ts           # Server entry point
+│   ├── routes.ts          # API routes
+│   └── storage.ts         # In-memory data storage
+├── shared/                # Shared schemas and types
+└── package.json           # Dependencies and scripts
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Port 5000 already in use**:
+   - Kill any processes using port 5000
+   - Or modify the port in `server/index.ts`
+
+2. **CORS errors**:
+   - The application is configured to run on the same port to avoid CORS issues
+   - Ensure you're accessing via `http://localhost:5000`
+
+3. **Rate limiting errors**:
+   - Wait 5 seconds between scraping requests
+   - Rate limits reset automatically
+
+4. **Scraping failures**:
+   - Ensure target URLs are publicly accessible
+   - Some websites may block automated requests
+   - Check that URLs use HTTP or HTTPS protocol
+
+### Browser Console
+
+Monitor the browser console for any client-side errors. The application includes comprehensive error handling and user feedback.
+
+## Contributing
+
+This is a self-contained application. To extend functionality:
+
+1. **Add new scraping options** in `shared/schema.ts`
+2. **Implement scraping logic** in `server/routes.ts`
+3. **Update UI components** in `client/src/components/`
+
+## License
+
+This project is provided as-is for educational and development purposes.
