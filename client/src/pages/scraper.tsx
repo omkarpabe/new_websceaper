@@ -1,12 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrapingForm } from "@/components/scraping-form";
 import { StatusPanel } from "@/components/status-panel";
 import { ResultsSection } from "@/components/results-section";
 import { JobsHistory } from "@/components/jobs-history";
 import { type ScrapingJob } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ScraperPage() {
   const [currentJob, setCurrentJob] = useState<ScrapingJob | null>(null);
+
+  // Query to monitor the current job status
+  const { data: jobData } = useQuery<ScrapingJob>(
+    ["/api/scraping-jobs", currentJob?.id],
+    async () => {
+      if (!currentJob?.id) return null;
+      const response = await fetch(`/api/scraping-jobs/${currentJob.id}`);
+      if (!response.ok) throw new Error('Failed to fetch job');
+      return response.json();
+    },
+    {
+      enabled: !!currentJob?.id,
+      refetchInterval: currentJob?.status === "running" ? 1000 : false,
+      staleTime: 0,
+      cacheTime: 0,
+    }
+  );
+
+  // Update the current job when the job data changes
+  useEffect(() => {
+    if (jobData && currentJob && jobData.id === currentJob.id) {
+      setCurrentJob(jobData);
+    }
+  }, [jobData]);
 
   const handleJobSelect = (job: ScrapingJob) => {
     setCurrentJob(job);

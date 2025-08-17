@@ -37,6 +37,8 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
     queryKey: ["/api/scraping-jobs", currentJob?.id],
     enabled: !!currentJob?.id,
     refetchInterval: currentJob?.status === "running" ? 1000 : false,
+    staleTime: 0, // Ensure we always get fresh data
+    cacheTime: 0, // Don't cache the results
   });
 
   const results = job?.results as any;
@@ -66,7 +68,11 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
   };
 
   const handleClearResults = () => {
-    window.location.reload();
+    // Invalidate queries and reset the current job
+    queryClient.invalidateQueries({ queryKey: ["/api/scraping-jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/scraping-jobs", currentJob?.id] });
+    // Force a refetch to update the UI
+    queryClient.refetchQueries({ queryKey: ["/api/scraping-jobs"] });
   };
 
   const handleCancelJob = () => {

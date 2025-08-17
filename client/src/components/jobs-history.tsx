@@ -34,6 +34,8 @@ export function JobsHistory({ onJobSelect, currentJob }: JobsHistoryProps) {
       return response.json();
     },
     refetchInterval: currentJob?.status === "running" ? 2000 : 10000,
+    staleTime: 0, // Ensure we always get fresh data
+    cacheTime: 0, // Don't cache the results
   });
 
   const getStatusBadge = (status: string) => {

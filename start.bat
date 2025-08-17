@@ -31,10 +31,12 @@ echo ✅ Dependencies installed successfully
 
 echo.
 echo 🚀 Starting Web Scraper Pro...
-echo    Server will be available at: http://localhost:5000
+echo    Server will be available at: http://localhost:3000
 echo    Press Ctrl+C to stop the server
 echo.
 
-call npm run dev
+REM Run with Windows-compatible environment variable setting
+set NODE_ENV=development
+call npx tsx server/index.ts
 
 pause
