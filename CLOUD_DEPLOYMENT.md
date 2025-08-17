@@ -183,3 +183,94 @@ All the platforms mentioned above support continuous deployment from GitHub:
 - **Build Failures**: Check that all dependencies are correctly listed in package.json
 - **Runtime Errors**: Review the platform's logs for error messages
 - **Performance Issues**: Consider upgrading your service plan or optimizing the application
+
+### Common Vercel Error Codes
+
+When deploying to Vercel, you might encounter these common error codes:
+
+1. **NOT_FOUND (404)**: The requested resource or deployment was not found
+2. **DEPLOYMENT_NOT_FOUND (404)**: The specific deployment you're trying to access doesn't exist
+3. **FUNCTION_INVOCATION_FAILED (500)**: Server-side function execution failed
+4. **FUNCTION_INVOCATION_TIMEOUT (504)**: Server-side function took too long to execute
+5. **FUNCTION_PAYLOAD_TOO_LARGE (413)**: Request body sent to a serverless function is too large
+6. **MIDDLEWARE_INVOCATION_FAILED (500)**: Middleware execution failed
+7. **MIDDLEWARE_INVOCATION_TIMEOUT (504)**: Middleware took too long to execute
+8. **DEPLOYMENT_PAUSED (503)**: The deployment is currently paused
+
+### Resolving Common Vercel Errors
+
+- **404 Errors**: Check your routing configuration in `vercel.json` and ensure all paths are correctly defined
+- **500 Errors**: Review your server-side code for bugs or issues handling requests
+- **Timeout Errors**: Optimize your serverless functions to execute within the time limits
+- **Payload Errors**: Reduce the size of request/response data or use streaming for large data transfers
+
+### Common Netlify Error Codes
+
+When deploying to Netlify, you might encounter these common issues:
+
+1. **Build Command Failed**: The build command specified in your Netlify configuration failed to execute
+2. **Function Bundling Failed**: Issues with packaging serverless functions
+3. **Deploy Failed**: General deployment failure, often due to build issues
+4. **Function Execution Error (500)**: Server-side function execution failed
+5. **Function Timeout (504)**: Function took too long to execute (default timeout is 10 seconds)
+
+### Resolving Common Netlify Errors
+
+- **Build Failures**: Check the build logs for specific errors and ensure all dependencies are installed
+- **Function Errors**: Review your function code and test locally using Netlify CLI
+- **Routing Issues**: Verify your `netlify.toml` redirects and rewrite rules
+- **Timeout Errors**: Optimize function code or increase timeout limits in your Netlify configuration
+
+### Common Docker Deployment Issues
+
+1. **Image Build Failures**: Issues with Dockerfile instructions or dependencies
+2. **Container Exit**: Container stops unexpectedly after starting
+3. **Port Binding Issues**: Container ports not properly mapped to host
+4. **Volume Mount Problems**: Issues with persistent storage configuration
+5. **Network Connectivity**: Container cannot connect to required services
+
+### Resolving Docker Deployment Issues
+
+- **Build Failures**: Check Dockerfile syntax and ensure base images are available
+- **Container Exits**: Review container logs for error messages and ensure environment variables are set correctly
+- **Port Issues**: Verify port mappings in `docker-compose.yml` or docker run commands
+- **Network Issues**: Check network configuration and ensure services can communicate
+
+### Common Heroku Deployment Errors
+
+1. **H10 - App Crashed**: Application crashed after startup
+2. **H12 - Request Timeout**: Request took too long to complete
+3. **H14 - No Web Dynos Running**: Web process type not scaled up
+4. **H20 - App Boot Timeout**: Application failed to boot within 60 seconds
+5. **R14 - Memory Quota Exceeded**: Application using too much memory
+
+### Resolving Heroku Deployment Issues
+
+- **App Crashes**: Check application logs using `heroku logs --tail`
+- **Timeout Errors**: Optimize slow operations or move them to background workers
+- **Boot Issues**: Ensure your application starts within the time limit
+- **Memory Issues**: Optimize memory usage or upgrade to a larger dyno
+
+## Deployment Best Practices
+
+### Pre-Deployment Checklist
+
+1. **Local Testing**: Ensure the application runs correctly in a production-like environment locally
+2. **Environment Variables**: Verify all required environment variables are configured
+3. **Dependencies**: Make sure all dependencies are properly listed in package.json
+4. **Build Process**: Test the build process locally before deploying
+5. **Security**: Remove any sensitive information from the codebase
+
+### Post-Deployment Verification
+
+1. **Functionality Testing**: Verify all features work as expected in the deployed environment
+2. **Performance Testing**: Check load times and responsiveness
+3. **Error Monitoring**: Set up error tracking and monitoring
+4. **Backup Strategy**: Implement regular backups if using a database
+
+### Maintenance
+
+1. **Regular Updates**: Keep dependencies updated to patch security vulnerabilities
+2. **Monitoring**: Regularly check application logs and performance metrics
+3. **Scaling**: Adjust resources based on usage patterns
+4. **Documentation**: Keep deployment documentation updated with any changes
