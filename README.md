@@ -99,7 +99,11 @@ The application includes rate limiting to prevent abuse:
    - Kill any processes using port 5000
    - Or modify the port in `server/index.ts`
 
-2. **CORS errors**:
+2. **UI not updating when job completes**:
+   - This issue has been fixed in the latest version
+   - The fix ensures React Query properly refreshes data when job status changes
+
+3. **CORS errors**:
    - The application is configured to run on the same port to avoid CORS issues
    - Ensure you're accessing via `http://localhost:5000`
 
