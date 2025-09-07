@@ -40,7 +40,12 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Initialize the app for Netlify Functions
+let isInitialized = false;
+
+async function initializeApp() {
+  if (isInitialized) return app;
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -60,9 +65,28 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use port 3000 which should be available without elevated permissions
-  const port = 3000;
-  server.listen(port, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+  // For local development
+  if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
+    const port = 3000;
+    server.listen(port, () => {
+      log(`serving on port ${port}`);
+    });
+  }
+  
+  isInitialized = true;
+  return app;
+}
+
+// Export for Netlify Functions
+export const handler = async (event: any, context: any) => {
+  const app = await initializeApp();
+  const serverless = require('serverless-http');
+  return serverless(app)(event, context);
+};
+
+// For local development
+if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
+  initializeApp();
+}
+
+export default app;
