@@ -40,53 +40,61 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize the app for Netlify Functions
-let isInitialized = false;
+// Initialize app for production/Netlify without async
+let appInitialized = false;
+let serverlessHandler: any = null;
 
-async function initializeApp() {
-  if (isInitialized) return app;
+// Synchronous initialization for basic Express setup
+function setupBasicApp() {
+  if (appInitialized) return;
   
-  const server = await registerRoutes(app);
-
+  // Add error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
   });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
+  
+  // Setup static serving for production
+  if (process.env.NODE_ENV === "production" || process.env.NETLIFY) {
     serveStatic(app);
   }
-
-  // For local development
-  if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
-    const port = 3000;
-    server.listen(port, () => {
-      log(`serving on port ${port}`);
-    });
-  }
   
-  isInitialized = true;
-  return app;
+  appInitialized = true;
 }
 
 // Export for Netlify Functions
 export const handler = async (event: any, context: any) => {
-  const app = await initializeApp();
-  const serverless = require('serverless-http');
-  return serverless(app)(event, context);
+  if (!serverlessHandler) {
+    setupBasicApp();
+    
+    // Initialize routes asynchronously
+    await registerRoutes(app);
+    
+    const serverless = require('serverless-http');
+    serverlessHandler = serverless(app);
+  }
+  return serverlessHandler(event, context);
 };
 
-// For local development
+// For local development - use the original async pattern
 if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
-  initializeApp();
+  (async () => {
+    const server = await registerRoutes(app);
+    
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      res.status(status).json({ message });
+    });
+    
+    await setupVite(app, server);
+    
+    const port = 3000;
+    server.listen(port, () => {
+      log(`serving on port ${port}`);
+    });
+  })();
 }
 
 export default app;
