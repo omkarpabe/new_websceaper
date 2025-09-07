@@ -77,9 +77,9 @@ export const handler = async (event: any, context: any) => {
   return serverlessHandler(event, context);
 };
 
-// For local development - use the original async pattern
+// For local development - initialize without top-level await
 if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
-  (async () => {
+  const initDev = async () => {
     const server = await registerRoutes(app);
     
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -94,7 +94,9 @@ if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
     server.listen(port, () => {
       log(`serving on port ${port}`);
     });
-  })();
+  };
+  
+  initDev().catch(console.error);
 }
 
 export default app;
