@@ -10,21 +10,19 @@ export default function ScraperPage() {
   const [currentJob, setCurrentJob] = useState<ScrapingJob | null>(null);
 
   // Query to monitor the current job status
-  const { data: jobData } = useQuery<ScrapingJob>(
-    ["/api/scraping-jobs", currentJob?.id],
-    async () => {
+  const { data: jobData } = useQuery<ScrapingJob>({
+    queryKey: ["/api/scraping-jobs", currentJob?.id],
+    queryFn: async () => {
       if (!currentJob?.id) return null;
       const response = await fetch(`/api/scraping-jobs/${currentJob.id}`);
       if (!response.ok) throw new Error('Failed to fetch job');
       return response.json();
     },
-    {
-      enabled: !!currentJob?.id,
-      refetchInterval: currentJob?.status === "running" ? 1000 : false,
-      staleTime: 0,
-      cacheTime: 0,
-    }
-  );
+    enabled: !!currentJob?.id,
+     refetchInterval: currentJob?.status === "running" ? 1000 : false,
+     staleTime: 0,
+     gcTime: 0,
+   });
 
   // Update the current job when the job data changes
   useEffect(() => {
