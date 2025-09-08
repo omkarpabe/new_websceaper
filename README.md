@@ -18,34 +18,56 @@ A full-stack web application for extracting data from websites with customizable
 - **Web Scraping**: Cheerio for HTML parsing
 - **State Management**: React Query for server state
 - **Validation**: Zod for type-safe schemas
+- **Containerization**: Docker & Docker Compose
 
-## Local Setup
+## Quick Start with Docker
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+
+### Running the Application
+
+1. **Clone or extract the project**:
+   ```bash
+   cd WebScrapeExtract
+   ```
+
+2. **Build and run with Docker Compose**:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application**:
+   ```
+   http://localhost:3000
+   ```
+
+The application will be fully containerized and ready to use!
+
+## Local Development Setup
 
 ### Prerequisites
 
 - Node.js (version 18 or higher)
-- npm or yarn package manager
+- npm package manager
 
 ### Installation
 
-1. **Extract the project files** to your desired directory
-
-2. **Install dependencies**:
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Start the development server**:
+2. **Start the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open your browser** and navigate to:
+3. **Open your browser** and navigate to:
    ```
    http://localhost:5000
    ```
-
-The application will be running with both frontend and backend on the same port (5000).
 
 ## Usage
 
@@ -62,11 +84,29 @@ The application will be running with both frontend and backend on the same port 
 6. **View results** and download as JSON
 7. **Browse job history** with pagination
 
-## Rate Limiting
+## Deployment Options
 
-The application includes rate limiting to prevent abuse:
-- **Limit**: 1 scraping request per 5 seconds per IP address
-- **Purpose**: Protect both the application and target websites
+### Docker Deployment (Recommended)
+
+The application is containerized and can be deployed to any Docker-compatible platform:
+
+- **DigitalOcean App Platform**
+- **Google Cloud Run**
+- **AWS App Runner**
+- **Railway**
+- **Render.com**
+
+### Production Deployment Steps
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t webscraper .
+   ```
+
+2. **Run in production mode**:
+   ```bash
+   docker run -p 3000:3000 -e NODE_ENV=production webscraper
+   ```
 
 ## Project Structure
 
@@ -82,6 +122,8 @@ The application includes rate limiting to prevent abuse:
 │   ├── routes.ts          # API routes
 │   └── storage.ts         # In-memory data storage
 ├── shared/                # Shared schemas and types
+├── Dockerfile             # Docker configuration
+├── docker-compose.yml     # Docker Compose setup
 └── package.json           # Dependencies and scripts
 ```
 
@@ -90,22 +132,39 @@ The application includes rate limiting to prevent abuse:
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
+- `docker-compose up` - Run with Docker
+
+## Rate Limiting
+
+The application includes rate limiting to prevent abuse:
+- **Limit**: 1 scraping request per 5 seconds per IP address
+- **Purpose**: Protect both the application and target websites
 
 ## Troubleshooting
 
-### Common Issues
+### Docker Issues
+
+1. **Port 3000 already in use**:
+   ```bash
+   docker-compose down
+   # Or change port in docker-compose.yml
+   ```
+
+2. **Build failures**:
+   ```bash
+   docker-compose down
+   docker-compose up --build --force-recreate
+   ```
+
+### Development Issues
 
 1. **Port 5000 already in use**:
    - Kill any processes using port 5000
    - Or modify the port in `server/index.ts`
 
-2. **UI not updating when job completes**:
-   - This issue has been fixed in the latest version
-   - The fix ensures React Query properly refreshes data when job status changes
-
-3. **CORS errors**:
-   - The application is configured to run on the same port to avoid CORS issues
-   - Ensure you're accessing via `http://localhost:5000`
+2. **CORS errors**:
+   - The application runs on the same port to avoid CORS issues
+   - Ensure you're accessing via the correct localhost URL
 
 3. **Rate limiting errors**:
    - Wait 5 seconds between scraping requests
@@ -116,17 +175,14 @@ The application includes rate limiting to prevent abuse:
    - Some websites may block automated requests
    - Check that URLs use HTTP or HTTPS protocol
 
-### Browser Console
-
-Monitor the browser console for any client-side errors. The application includes comprehensive error handling and user feedback.
-
 ## Contributing
 
-This is a self-contained application. To extend functionality:
+To extend functionality:
 
 1. **Add new scraping options** in `shared/schema.ts`
 2. **Implement scraping logic** in `server/routes.ts`
 3. **Update UI components** in `client/src/components/`
+4. **Test with Docker** before deploying
 
 ## License
 
