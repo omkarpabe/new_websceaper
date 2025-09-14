@@ -46,7 +46,7 @@ export default function ScraperPage() {
                 <i className="fas fa-spider text-white text-lg"></i>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">WebScraper Pro</h1>
+                <h1 className="text-xl font-bold text-gray-900">WebScraper</h1>
                 <p className="text-xs text-gray-500">Extract data from any website</p>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function ScraperPage() {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <i className="fas fa-spider text-white text-sm"></i>
               </div>
-              <span className="text-gray-600">WebScraper Pro</span>
+              <span className="text-gray-600">WebScraper</span>
             </div>
             
             <div className="flex items-center space-x-6 text-sm text-gray-500">

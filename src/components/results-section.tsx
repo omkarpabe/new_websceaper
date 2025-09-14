@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ interface ResultsSectionProps {
 
 export function ResultsSection({ currentJob }: ResultsSectionProps) {
   const { toast } = useToast();
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
 
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
@@ -65,6 +67,31 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
       title: "Download Started",
       description: "Your results have been downloaded as a JSON file.",
     });
+  };
+
+  const handleCopyJSON = () => {
+    if (!results) return;
+
+    const dataStr = JSON.stringify(results, null, 2);
+    navigator.clipboard.writeText(dataStr).then(() => {
+      toast({
+        title: "Copied to Clipboard",
+        description: "JSON data has been copied to your clipboard.",
+      });
+    }).catch(() => {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy JSON data to clipboard.",
+        variant: "destructive",
+      });
+    });
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const handleClearResults = () => {
@@ -125,6 +152,16 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
             >
               <i className="fas fa-download mr-2"></i>
               Download JSON
+            </Button>
+            
+            <Button 
+              onClick={handleCopyJSON}
+              variant="outline"
+              size="sm"
+              disabled={!hasResults}
+            >
+              <i className="fas fa-copy mr-2"></i>
+              Copy JSON
             </Button>
             
             <Button 
@@ -214,16 +251,28 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
           {/* Links Section */}
           {results.links && results.links.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <i className="fas fa-link text-blue-600 mr-2"></i>
-                Extracted Links
-                <Badge variant="secondary" className="ml-2">
-                  {results.links.length} found
-                </Badge>
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <i className="fas fa-link text-blue-600 mr-2"></i>
+                  Extracted Links
+                  <Badge variant="secondary" className="ml-2">
+                    {results.links.length} found
+                  </Badge>
+                </h3>
+                {results.links.length > 10 && (
+                  <Button
+                    onClick={() => toggleSection('links')}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    <i className={`fas ${expandedSections.links ? 'fa-chevron-up' : 'fa-chevron-down'} mr-2`}></i>
+                    {expandedSections.links ? 'Show Less' : `Show All ${results.links.length}`}
+                  </Button>
+                )}
+              </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {results.links.slice(0, 10).map((link: any, index: number) => (
+                  {(expandedSections.links ? results.links : results.links.slice(0, 10)).map((link: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{link.text}</p>
@@ -232,7 +281,7 @@ export function ResultsSection({ currentJob }: ResultsSectionProps) {
                       <i className="fas fa-external-link-alt text-gray-400 text-xs ml-2"></i>
                     </div>
                   ))}
-                  {results.links.length > 10 && (
+                  {!expandedSections.links && results.links.length > 10 && (
                     <p className="text-sm text-gray-500 text-center py-2">
                       ... and {results.links.length - 10} more links
                     </p>
