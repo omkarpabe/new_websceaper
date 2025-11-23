@@ -1,6 +1,31 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Simple log function for production
+function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+
+// Static file serving for production
+function serveStatic(app: express.Express) {
+  const distPath = path.resolve(__dirname, "../dist");
+  app.use(express.static(distPath));
+  
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(distPath, "index.html"));
+  });
+}
 
 const app = express();
 
@@ -80,6 +105,7 @@ export const handler = async (event: any, context: any) => {
 // For local development - initialize without top-level await
 if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
   const initDev = async () => {
+    const { setupVite } = await import("./vite.js");
     const server = await registerRoutes(app);
     
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -97,6 +123,19 @@ if (process.env.NODE_ENV === "development" && !process.env.NETLIFY) {
   };
   
   initDev().catch(console.error);
+} else {
+  // Production mode - start server directly
+  const initProd = async () => {
+    setupBasicApp();
+    const server = await registerRoutes(app);
+    
+    const port = process.env.PORT || 3000;
+    server.listen(port, () => {
+      log(`serving on port ${port}`);
+    });
+  };
+  
+  initProd().catch(console.error);
 }
 
 export default app;
